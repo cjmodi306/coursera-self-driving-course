@@ -12,7 +12,7 @@ class Bicycle:
         self.l_r = 1.2 #m
         self.L = 2 #m
         self.max_steering_angle_rate = 1.22 #rad/s
-        self.turn_radius = 10 #m
+        self.turn_radius = 1 #m
         self.steering_angle = np.arctan(self.L/self.turn_radius)
 
 
@@ -40,8 +40,11 @@ class Bicycle:
         self.yc += lateral_acc * self.sample_time
 
 sample_time = 0.01
-time_end = 20
+time_end = 2
 model = Bicycle()
+model.turn_radius = 10
+model.steering_angle = np.arctan(model.L/model.turn_radius)
+velocity = 2*np.pi*model.turn_radius/time_end
 
 # set delta directly
 t_data = np.arange(0,time_end,sample_time)
@@ -53,14 +56,17 @@ y_solution = np.zeros_like(t_data)
 for i in range(t_data.shape[0]):
     x_data[i] = model.xc
     y_data[i] = model.yc
-    model.step(np.pi, 0)
+    model.step(velocity, 0)
     #model.beta = 0
     #solution_model.beta=0
     
-#plt.axis('equal')
-#plt.plot(x_data, y_data,label='Learner Model')
-#plt.legend()
-#plt.show()
+plt.axis('equal')
+plt.plot(x_data, y_data)
+plt.xlabel('X Coordinates')
+plt.ylabel('Y Coordinates')
+plt.title('Vehicle in circular path', fontweight='bold')
+plt.grid()
+plt.show()
 
 sample_time = 0.01
 time_end = 30
