@@ -119,6 +119,8 @@ class Controller2D(object):
         self.vars.create_var('throttle_previous', 0.0)
         self.vars.create_var('heading_previous', 0.0)
         self.vars.create_var('frame_previous', self._current_frame)
+        self.vars.create_var('x_previous', 0.0)
+        self.vars.create_var('y_previous', 0.0)
 
         # Skip the first frame to store previous values properly
         if self._start_control_loop:
@@ -197,10 +199,35 @@ class Controller2D(object):
             
             # Change the steer output with the lateral controller.
             steer_output    = 0
-            crosstrack_error = waypoints[self._current_frame][0] - self._current_x
-            ref_heading_angle = np.arctan2(waypoints[self._current_frame][1] - waypoints[self.vars.frame_previous][1], 
-                                       waypoints[self._current_frame][0] - waypoints[self.vars.frame_previous][0])
+            current_pos = np.array((x, y))
+            waypoint_current_x = waypoints[self._current_frame][0]
+            waypoint_current_y = waypoints[self._current_frame][1]
+            waypoint_previous_x = waypoints[self.vars.frame_previous][0]
+            waypoint_previous_y = waypoints[self.vars.frame_previous][1]
+
+            # heading error
+            ref_heading_angle = np.arctan2(waypoint_current_y - waypoint_previous_y, waypoint_current_x - waypoint_previous_x)
+            heading_error = (ref_heading_angle - yaw)
             
+            # crosstrack error
+            crosstrack_distance = np.min(np.sum((np.array((waypoints))[:, :2] - current_pos)**2,  axis=1))
+            crosstrack_correction = np.arctan2(y-waypoint_current_y, x-waypoint_current_x)
+            
+            steer_output = heading_error + crosstrack_diff_angle
+
+            print("x, y: ", x, y)
+            print("waypoints_x, waypoints_y: ", waypoint_current_x, waypoint_current_y)
+            print("yaw: ", yaw)
+            print("reference heading: ", ref_heading_angle)
+            print("heading error: ", heading_error)
+            #print("crosstrack_error: ", crosstrack_error)
+            print("steer_output: ", steer_output)
+            print("\n")
+
+            if steer_output > 1.22:
+                steer_output = 1.22
+            elif steer_output < -1.22:
+                steer_output = -1.22
 
             ######################################################
             # SET CONTROLS OUTPUT
@@ -224,3 +251,5 @@ class Controller2D(object):
         self.vars.speed_error_previous = speed_error
         self.vars.throttle_previous = throttle_output
         self.vars.frame_previous = self._current_frame
+        self.vars.x_previous = self._current_x
+        self.vars.y_previous = self._current_y
